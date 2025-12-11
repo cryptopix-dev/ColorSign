@@ -1,0 +1,67 @@
+#ifndef CLWE_COLOR_INTEGRATION_HPP
+#define CLWE_COLOR_INTEGRATION_HPP
+
+#include <vector>
+#include <cstdint>
+
+namespace clwe {
+
+/**
+ * @brief Color integration module for ColorSign
+ *
+ * Provides functions to encode polynomials and vectors into RGBA pixel arrays
+ * for visualization, and decode back. Coefficients are packed into RGBA pixels
+ * where each pixel represents one coefficient.
+ */
+
+/**
+ * @brief Encode a single polynomial into RGBA color data
+ *
+ * Each coefficient is packed into 4 bytes (RGBA) as:
+ * - R: (coeff >> 24) & 0xFF
+ * - G: (coeff >> 16) & 0xFF
+ * - B: (coeff >> 8) & 0xFF
+ * - A: coeff & 0xFF
+ *
+ * @param poly The polynomial coefficients
+ * @param modulus The modulus for coefficient reduction (typically q)
+ * @return RGBA color data as byte array
+ */
+std::vector<uint8_t> encode_polynomial_as_colors(const std::vector<uint32_t>& poly, uint32_t modulus);
+
+/**
+ * @brief Decode RGBA color data into a single polynomial
+ *
+ * Unpacks RGBA bytes back into coefficients and reduces modulo modulus.
+ *
+ * @param color_data RGBA color data
+ * @param modulus The modulus for coefficient reduction
+ * @return Polynomial coefficients
+ */
+std::vector<uint32_t> decode_colors_to_polynomial(const std::vector<uint8_t>& color_data, uint32_t modulus);
+
+/**
+ * @brief Encode a vector of polynomials into RGBA color data
+ *
+ * Each polynomial in the vector is encoded sequentially.
+ *
+ * @param poly_vector Vector of polynomials
+ * @param modulus The modulus for coefficient reduction
+ * @return RGBA color data as byte array
+ */
+std::vector<uint8_t> encode_polynomial_vector_as_colors(const std::vector<std::vector<uint32_t>>& poly_vector, uint32_t modulus);
+
+/**
+ * @brief Decode RGBA color data into a vector of polynomials
+ *
+ * @param color_data RGBA color data
+ * @param k Number of polynomials in the vector
+ * @param n Degree of each polynomial
+ * @param modulus The modulus for coefficient reduction
+ * @return Vector of polynomials
+ */
+std::vector<std::vector<uint32_t>> decode_colors_to_polynomial_vector(const std::vector<uint8_t>& color_data, uint32_t k, uint32_t n, uint32_t modulus);
+
+} // namespace clwe
+
+#endif // CLWE_COLOR_INTEGRATION_HPP
