@@ -57,8 +57,8 @@ bool ColorSignVerify::verify_signature_basic(const ColorSignPublicKey& public_ke
                                              const ColorSignature& signature,
                                              const std::vector<uint8_t>& message,
                                              const std::vector<uint8_t>& context) const {
-    // Decode z from signature using standard ML-DSA polynomial unpacking
-    std::vector<std::vector<uint32_t>> z = unpack_polynomial_vector(signature.z_data, params_.module_rank, params_.degree);
+    // Decode z from signature using 18-bit encoding
+    std::vector<std::vector<uint32_t>> z = unpack_polynomial_vector_ml_dsa(signature.z_data, params_.module_rank, params_.degree, params_.modulus, 18);
 
     // Check z bounds: ||z||_∞ < γ₁ - β
     if (!check_z_bounds(z)) {
@@ -266,7 +266,7 @@ bool ColorSignVerify::validate_cryptographic_integrity_final(const ColorSignPubl
 
     // Validate z data can be decoded and re-encoded consistently
     try {
-        std::vector<std::vector<uint32_t>> z_decoded = unpack_polynomial_vector(signature.z_data, params_.module_rank, params_.degree);
+        std::vector<std::vector<uint32_t>> z_decoded = unpack_polynomial_vector_ml_dsa(signature.z_data, params_.module_rank, params_.degree, params_.modulus, 18);
         
         // Basic sanity check on decoded data
         if (z_decoded.size() != params_.module_rank) {
@@ -358,8 +358,8 @@ std::vector<std::vector<uint32_t>> ColorSignVerify::generate_matrix_A(const std:
 
 // Extract t from public key
 std::vector<std::vector<uint32_t>> ColorSignVerify::extract_t_from_public_key(const std::vector<uint8_t>& public_data) const {
-    // Public key contains t vector (k polynomials)
-    return unpack_polynomial_vector(public_data, params_.module_rank, params_.degree);
+    // Public key contains t vector encoded as RGB colors (k polynomials)
+    return clwe::decode_colors_to_polynomial_vector(public_data, params_.module_rank, params_.degree, params_.modulus);
 }
 
 // Unpack challenge polynomial from c_hash

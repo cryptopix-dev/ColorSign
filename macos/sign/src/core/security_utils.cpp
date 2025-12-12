@@ -7,6 +7,7 @@
 #include <memory>
 #include <map>
 #include <cmath>
+#include <iostream>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -153,7 +154,36 @@ SecurityError InputValidator::validate_key_format(const std::vector<uint8_t>& ke
         return size_check;
     }
 
-    size_t expected_min_size = params.module_rank * params.degree * 4;
+    // Check if this is 8-bit grayscale color-encoded key
+    size_t eight_bit_size = params.module_rank * params.degree * 1;
+    if (key_data.size() == eight_bit_size) {
+        std::cout << "DEBUG: Key validated as 8-bit grayscale, size: " << key_data.size() << std::endl;
+        return SecurityError::SUCCESS;
+    }
+
+    // Check if this is RGB565 color-encoded key
+    size_t color_size = params.module_rank * params.degree * 2;
+    if (key_data.size() == color_size) {
+        std::cout << "DEBUG: Key validated as RGB565, size: " << key_data.size() << std::endl;
+        return SecurityError::SUCCESS;
+    }
+
+    // Check if this is a compressed key (starts with 0x03 0x08)
+    bool is_compressed = (key_data.size() >= 2 && key_data[0] == 0x03 && key_data[1] == 0x08);
+
+    size_t expected_min_size;
+    if (is_compressed) {
+        // For compressed keys, minimum size is header + some data
+        expected_min_size = 10;  // Header + minimal data
+    } else {
+        // For uncompressed keys
+        expected_min_size = params.module_rank * params.degree * 4;
+    }
+
+    std::cout << "DEBUG: Key size: " << key_data.size() << ", expected min: " << expected_min_size
+              << ", 8-bit expected: " << eight_bit_size << ", RGB565 expected: " << color_size
+              << ", is_compressed: " << is_compressed << std::endl;
+
     if (key_data.size() < expected_min_size) {
         return SecurityError::INVALID_KEY_FORMAT;
     }

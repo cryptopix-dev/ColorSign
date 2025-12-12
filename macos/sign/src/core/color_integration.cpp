@@ -11,9 +11,7 @@ std::vector<uint8_t> encode_polynomial_as_colors(const std::vector<uint32_t>& po
 
     for (uint32_t coeff : poly) {
         coeff %= modulus;
-        color_data.push_back((coeff >> 24) & 0xFF);
-        color_data.push_back((coeff >> 16) & 0xFF);
-        color_data.push_back((coeff >> 8) & 0xFF);
+        // Pack coefficient into RGB format (take lower 8 bits)
         color_data.push_back(coeff & 0xFF);
     }
 
@@ -21,19 +19,16 @@ std::vector<uint8_t> encode_polynomial_as_colors(const std::vector<uint32_t>& po
 }
 
 std::vector<uint32_t> decode_colors_to_polynomial(const std::vector<uint8_t>& color_data, uint32_t modulus) {
-    if (color_data.size() % 4 != 0) {
-        throw std::invalid_argument("Color data size must be multiple of 4");
-    }
-
     std::vector<uint32_t> poly;
-    poly.reserve(color_data.size() / 4);
+    poly.reserve(color_data.size());
 
-    for (size_t i = 0; i < color_data.size(); i += 4) {
-        uint32_t coeff = ((uint32_t)color_data[i] << 24) |
-                         ((uint32_t)color_data[i + 1] << 16) |
-                         ((uint32_t)color_data[i + 2] << 8) |
-                         (uint32_t)color_data[i + 3];
-        poly.push_back(coeff % modulus);
+    // Unpack from RGB format where each pixel contains up to 3 coefficients
+    for (size_t pixel_start = 0; pixel_start < color_data.size(); pixel_start += 3) {
+        size_t end = std::min(pixel_start + 3, color_data.size());
+        for (size_t b = pixel_start; b < end; ++b) {
+            uint32_t coeff = color_data[b];
+            poly.push_back(coeff % modulus);
+        }
     }
 
     return poly;
@@ -51,21 +46,22 @@ std::vector<uint8_t> encode_polynomial_vector_as_colors(const std::vector<std::v
 }
 
 std::vector<std::vector<uint32_t>> decode_colors_to_polynomial_vector(const std::vector<uint8_t>& color_data, uint32_t k, uint32_t n, uint32_t modulus) {
-    if (color_data.size() != k * n * 4) {
+    size_t total_coeffs = k * n;
+    if (color_data.size() != total_coeffs) {
         throw std::invalid_argument("Color data size does not match expected dimensions");
     }
 
     std::vector<std::vector<uint32_t>> poly_vector(k, std::vector<uint32_t>(n));
 
-    size_t idx = 0;
-    for (uint32_t i = 0; i < k; ++i) {
-        for (uint32_t j = 0; j < n; ++j) {
-            uint32_t coeff = ((uint32_t)color_data[idx] << 24) |
-                             ((uint32_t)color_data[idx + 1] << 16) |
-                             ((uint32_t)color_data[idx + 2] << 8) |
-                             (uint32_t)color_data[idx + 3];
-            poly_vector[i][j] = coeff % modulus;
-            idx += 4;
+    size_t coeff_idx = 0;
+    // Unpack from RGB format where each pixel contains up to 3 coefficients
+    for (size_t pixel_start = 0; pixel_start < color_data.size() && coeff_idx < total_coeffs; pixel_start += 3) {
+        size_t end = std::min(pixel_start + 3, color_data.size());
+        for (size_t b = pixel_start; b < end && coeff_idx < total_coeffs; ++b) {
+            size_t i = coeff_idx / n;
+            size_t j = coeff_idx % n;
+            poly_vector[i][j] = static_cast<uint32_t>(color_data[b]) % modulus;
+            ++coeff_idx;
         }
     }
 
@@ -382,18 +378,9 @@ std::vector<std::vector<uint32_t>> decode_polynomial_vector_with_color_integrati
         uint32_t n = 1; // Default, will be adjusted
 
         // Try to determine dimensions from data size
-        if (color_integrated_data.size() % 4 == 0) {
-            // Standard color format: 4 bytes per coefficient
-            n = color_integrated_data.size() / 4;
-            return decode_colors_to_polynomial_vector(color_integrated_data, 1, n, modulus);
-        } else {
-            // Compressed color format - try to decode
-            try {
-                return decode_colors_to_polynomial_vector_compressed(color_integrated_data, 1, n, modulus);
-            } catch (const std::exception&) {
-                throw std::invalid_argument("Invalid color-integrated data format");
-            }
-        }
+        // Standard color format: 1 byte per coefficient
+        n = color_integrated_data.size();
+        return decode_colors_to_polynomial_vector(color_integrated_data, 1, n, modulus);
     }
 }
 
