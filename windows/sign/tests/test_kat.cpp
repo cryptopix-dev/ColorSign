@@ -238,7 +238,7 @@ TEST_F(KATTest, MLDSA44_KAT) {
 
     // Verify that the generated keys have the correct structure and sizes
     EXPECT_EQ(public_key.serialize().size(), 32 + 32 + 64 + 4096); // rho + K + tr + public_data
-    EXPECT_EQ(private_key.serialize().size(), 32 + 32 + 64 + 12288); // rho + K + tr + secret_data
+    EXPECT_EQ(private_key.serialize().size(), 32 + 32 + 64 + 8192); // rho + K + tr + secret_data (s1 + s2 only)
 
     // Verify that the keys can be used for signing and verification
     ColorSign signer(params);
@@ -280,8 +280,8 @@ TEST_F(KATTest, MLDSA65_KAT) {
     // Just verify they're reasonable sizes, not exact values
     EXPECT_GT(public_key.serialize().size(), 6000);
     EXPECT_LT(public_key.serialize().size(), 7000);
-    EXPECT_GT(private_key.serialize().size(), 18000);
-    EXPECT_LT(private_key.serialize().size(), 19000);
+    EXPECT_GT(private_key.serialize().size(), 12000);
+    EXPECT_LT(private_key.serialize().size(), 13000);
 
     // Verify cryptographic operations work correctly
     ColorSign signer(params);
@@ -322,8 +322,8 @@ TEST_F(KATTest, MLDSA87_KAT) {
     // Just verify they're reasonable sizes, not exact values
     EXPECT_GT(public_key.serialize().size(), 8000);
     EXPECT_LT(public_key.serialize().size(), 9000);
-    EXPECT_GT(private_key.serialize().size(), 24000);
-    EXPECT_LT(private_key.serialize().size(), 25000);
+    EXPECT_GT(private_key.serialize().size(), 16000);
+    EXPECT_LT(private_key.serialize().size(), 17000);
 
     // Verify cryptographic operations work correctly
     ColorSign signer(params);

@@ -150,10 +150,10 @@ TEST_F(KeyGenTest, KeyGenerationConsistency) {
     size_t expected_public_size = 4 * 256 * 4; // k * n * 4 bytes
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key: s1 + s2 + t0, each using 4-byte packing
-    // s1: 4*256*4 bytes, s2: 4*256*4 bytes, t0: 4*256*4 bytes
-    // Total: 3 * 4 * 256 * 4 = 12288 bytes
-    size_t expected_private_size = 3 * 4 * 256 * 4;
+    // Private key: s1 + s2 only (t is public and recomputed)
+    // s1: 4*256*4 bytes, s2: 4*256*4 bytes
+    // Total: 2 * 4 * 256 * 4 = 8192 bytes
+    size_t expected_private_size = 2 * 4 * 256 * 4;
     EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
@@ -165,9 +165,9 @@ TEST_F(KeyGenTest, KeyGenerationConsistency65) {
     size_t expected_public_size = 6 * 256 * 4;
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key: s1 + s2 + t0, each using 4-byte packing
-    // Total: 3 * 6 * 256 * 4 = 18432 bytes
-    size_t expected_private_size = 3 * 6 * 256 * 4;
+    // Private key: s1 + s2 only (t is public and recomputed)
+    // Total: 2 * 6 * 256 * 4 = 12288 bytes
+    size_t expected_private_size = 2 * 6 * 256 * 4;
     EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
@@ -179,9 +179,9 @@ TEST_F(KeyGenTest, KeyGenerationConsistency87) {
     size_t expected_public_size = 8 * 256 * 4;
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key: s1 + s2 + t0, each using 4-byte packing
-    // Total: 3 * 8 * 256 * 4 = 24576 bytes
-    size_t expected_private_size = 3 * 8 * 256 * 4;
+    // Private key: s1 + s2 only (t is public and recomputed)
+    // Total: 2 * 8 * 256 * 4 = 16384 bytes
+    size_t expected_private_size = 2 * 8 * 256 * 4;
     EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
