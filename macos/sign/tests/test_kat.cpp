@@ -237,10 +237,10 @@ TEST_F(KATTest, MLDSA44_KAT) {
     EXPECT_EQ(private_key.serialize(), private_key2.serialize());
 
     // Verify that the generated keys have the correct structure and sizes
-    EXPECT_GT(public_key.serialize().size(), 3500);
-    EXPECT_LT(public_key.serialize().size(), 4500);
-    EXPECT_GT(private_key.serialize().size(), 8000);
-    EXPECT_LT(private_key.serialize().size(), 14000);
+    EXPECT_GT(public_key.serialize().size(), 1000);
+    EXPECT_LT(public_key.serialize().size(), 1200);
+    EXPECT_GT(private_key.serialize().size(), 2000);
+    EXPECT_LT(private_key.serialize().size(), 2200);
 
     // Verify that the keys can be used for signing and verification
     ColorSign signer(params);
@@ -280,10 +280,10 @@ TEST_F(KATTest, MLDSA65_KAT) {
 
     // Verify key sizes are appropriate for security level 65
     // Just verify they're reasonable sizes, not exact values
-    EXPECT_GT(public_key.serialize().size(), 6000);
-    EXPECT_LT(public_key.serialize().size(), 7000);
-    EXPECT_GT(private_key.serialize().size(), 12000);
-    EXPECT_LT(private_key.serialize().size(), 13000);
+    EXPECT_GT(public_key.serialize().size(), 1500);
+    EXPECT_LT(public_key.serialize().size(), 1700);
+    EXPECT_GT(private_key.serialize().size(), 3000);
+    EXPECT_LT(private_key.serialize().size(), 3200);
 
     // Verify cryptographic operations work correctly
     ColorSign signer(params);
@@ -322,10 +322,10 @@ TEST_F(KATTest, MLDSA87_KAT) {
 
     // Verify key sizes are appropriate for security level 87
     // Just verify they're reasonable sizes, not exact values
-    EXPECT_GT(public_key.serialize().size(), 8000);
-    EXPECT_LT(public_key.serialize().size(), 9000);
-    EXPECT_GT(private_key.serialize().size(), 16000);
-    EXPECT_LT(private_key.serialize().size(), 17000);
+    EXPECT_GT(public_key.serialize().size(), 2000);
+    EXPECT_LT(public_key.serialize().size(), 2200);
+    EXPECT_GT(private_key.serialize().size(), 4000);
+    EXPECT_LT(private_key.serialize().size(), 4200);
 
     // Verify cryptographic operations work correctly
     ColorSign signer(params);

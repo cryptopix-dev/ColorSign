@@ -145,15 +145,14 @@ TEST_F(KeyGenTest, KeyGenerationConsistency) {
     clwe::ColorSignKeyGen keygen(params44);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // Current implementation uses standard 4-byte packing (little-endian 32-bit per coefficient)
-    // For ML-DSA-44: k=4, n=256, 4 bytes per coefficient
-    size_t expected_public_size = 4 * 256 * 4; // k * n * 4 bytes
+    // 8-bit grayscale color encoding: k=4, n=256, 1 byte per coefficient
+    size_t expected_public_size = 4 * 256 * 1; // k * n * 1 bytes
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key: s1 + s2 + t0, each using 4-byte packing
-    // s1: 4*256*4 bytes, s2: 4*256*4 bytes, t0: 4*256*4 bytes
-    // Total: 3 * 4 * 256 * 4 = 12288 bytes
-    size_t expected_private_size = 3 * 4 * 256 * 4;
+    // Private key: s1 + s2 + t0, each using 1-byte packing
+    // s1: 4*256*1 bytes, s2: 4*256*1 bytes, t0: 4*256*1 bytes
+    // Total: 3 * 4 * 256 * 1 = 3072 bytes
+    size_t expected_private_size = 3 * 4 * 256 * 1;
     EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
@@ -161,13 +160,13 @@ TEST_F(KeyGenTest, KeyGenerationConsistency65) {
     clwe::ColorSignKeyGen keygen(params65);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // For ML-DSA-65: k=6, n=256, 4 bytes per coefficient
-    size_t expected_public_size = 6 * 256 * 4;
+    // For ML-DSA-65: k=6, n=256, 1 byte per coefficient
+    size_t expected_public_size = 6 * 256 * 1;
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key: s1 + s2 + t0, each using 4-byte packing
-    // Total: 3 * 6 * 256 * 4 = 18432 bytes
-    size_t expected_private_size = 3 * 6 * 256 * 4;
+    // Private key: s1 + s2 + t0, each using 1-byte packing
+    // Total: 3 * 6 * 256 * 1 = 4608 bytes
+    size_t expected_private_size = 3 * 6 * 256 * 1;
     EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
@@ -175,13 +174,13 @@ TEST_F(KeyGenTest, KeyGenerationConsistency87) {
     clwe::ColorSignKeyGen keygen(params87);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // For ML-DSA-87: k=8, n=256, 4 bytes per coefficient
-    size_t expected_public_size = 8 * 256 * 4;
+    // For ML-DSA-87: k=8, n=256, 1 byte per coefficient
+    size_t expected_public_size = 8 * 256 * 1;
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key: s1 + s2 + t0, each using 4-byte packing
-    // Total: 3 * 8 * 256 * 4 = 24576 bytes
-    size_t expected_private_size = 3 * 8 * 256 * 4;
+    // Private key: s1 + s2 + t0, each using 1-byte packing
+    // Total: 3 * 8 * 256 * 1 = 6144 bytes
+    size_t expected_private_size = 3 * 8 * 256 * 1;
     EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 

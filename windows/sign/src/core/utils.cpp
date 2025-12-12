@@ -477,4 +477,113 @@ std::vector<std::vector<uint32_t>> unpack_polynomial_vector(const std::vector<ui
     return poly_vector;
 }
 
+// ML-DSA standard compression using d bits per coefficient
+std::vector<uint8_t> pack_polynomial_vector_ml_dsa(const std::vector<std::vector<uint32_t>>& poly_vector, uint32_t modulus, uint32_t d) {
+    size_t total_bits = 0;
+    for (const auto& poly : poly_vector) {
+        total_bits += poly.size() * d;
+    }
+    size_t total_bytes = (total_bits + 7) / 8;
+
+    bool include_header = (d != 8 && d != 18); // For d=8 and d=18, no header for z compression
+    size_t header_size = include_header ? 6 : 0;
+    std::vector<uint8_t> compressed(header_size + total_bytes);
+
+    if (include_header) {
+        // Header: version 0x03, compression 0x08, k, n high, n low, d
+        compressed[0] = 0x03;
+        compressed[1] = 0x08;
+        uint32_t k = poly_vector.size();
+        uint32_t n = k > 0 ? poly_vector[0].size() : 0;
+        compressed[2] = static_cast<uint8_t>(k);
+        compressed[3] = static_cast<uint8_t>(n >> 8);
+        compressed[4] = static_cast<uint8_t>(n & 0xFF);
+        compressed[5] = static_cast<uint8_t>(d);
+    }
+
+    size_t byte_index = header_size;
+    uint8_t current_byte = 0;
+    uint8_t bits_in_byte = 0;
+
+    for (const auto& poly : poly_vector) {
+        for (uint32_t coeff : poly) {
+            uint32_t compressed_coeff = (static_cast<uint64_t>(coeff) * (1ULL << d) + (modulus / 2)) / modulus;
+            // Pack d bits
+            for (uint32_t bit = 0; bit < d; ++bit) {
+                if (compressed_coeff & (1U << bit)) {
+                    current_byte |= (1 << bits_in_byte);
+                }
+                bits_in_byte++;
+                if (bits_in_byte == 8) {
+                    compressed[byte_index++] = current_byte;
+                    current_byte = 0;
+                    bits_in_byte = 0;
+                }
+            }
+        }
+    }
+    if (bits_in_byte > 0) {
+        compressed[byte_index++] = current_byte;
+    }
+    compressed.resize(byte_index);
+    return compressed;
+}
+
+// Unpack ML-DSA compressed polynomial vector
+std::vector<std::vector<uint32_t>> unpack_polynomial_vector_ml_dsa(const std::vector<uint8_t>& data, uint32_t k, uint32_t n, uint32_t modulus, uint32_t d) {
+    size_t offset = 0;
+    uint32_t data_d = d;
+    if (data.size() >= 6) {
+        if (data[0] == 0x03 && data[1] == 0x08) {
+            uint32_t data_k = data[2];
+            uint32_t data_n = (static_cast<uint32_t>(data[3]) << 8) | data[4];
+            data_d = data[5];
+            if (data_k != k || data_n != n || data_d != d) {
+                throw std::invalid_argument("Dimension or d mismatch in ML-DSA compressed data");
+            }
+            offset = 6;
+        } else {
+            // No header, assume d as passed
+            offset = 0;
+            data_d = d;
+        }
+    } else {
+        throw std::invalid_argument("ML-DSA compressed data too small");
+    }
+
+    std::vector<std::vector<uint32_t>> poly_vector(k, std::vector<uint32_t>(n));
+    size_t byte_index = offset;
+    uint8_t current_byte = 0;
+    uint8_t bits_left_in_byte = 0;
+
+    auto get_bit = [&]() {
+        if (bits_left_in_byte == 0) {
+            if (byte_index >= data.size()) {
+                throw std::invalid_argument("Truncated ML-DSA compressed data");
+            }
+            current_byte = data[byte_index++];
+            bits_left_in_byte = 8;
+        }
+        bool bit = current_byte & 1;
+        current_byte >>= 1;
+        bits_left_in_byte--;
+        return bit;
+    };
+
+    for (uint32_t i = 0; i < k; ++i) {
+        for (uint32_t j = 0; j < n; ++j) {
+            uint32_t compressed_coeff = 0;
+            for (uint32_t bit = 0; bit < d; ++bit) {
+                if (get_bit()) {
+                    compressed_coeff |= (1U << bit);
+                }
+            }
+            // Decompress
+            uint64_t coeff = (static_cast<uint64_t>(compressed_coeff) * modulus + (1ULL << (d - 1))) / (1ULL << d);
+            poly_vector[i][j] = coeff % modulus;
+        }
+    }
+    return poly_vector;
+}
+
 } // namespace clwe

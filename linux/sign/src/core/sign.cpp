@@ -132,8 +132,8 @@ ColorSignature ColorSign::sign_message(const std::vector<uint8_t>& message,
     }
 
     // Extract s1 and s2 from private key
-    auto s1 = extract_s1_from_private_key(private_key.secret_data);
-    auto s2 = extract_s2_from_private_key(private_key.secret_data);
+    auto s1 = extract_s1_from_private_key(private_key);
+    auto s2 = extract_s2_from_private_key(private_key);
 
     // Generate matrix A from public key seed_rho
     auto matrix_A = generate_matrix_A(public_key.seed_rho);
@@ -245,8 +245,8 @@ ColorSignature ColorSign::sign_message(const std::vector<uint8_t>& message,
         // Pack challenge c
         auto c_packed = pack_challenge(c);
 
-        // Encode z using standard ML-DSA polynomial packing
-        std::vector<uint8_t> z_encoded = pack_polynomial_vector(z);
+        // Encode z using 18-bit encoding
+        std::vector<uint8_t> z_encoded = pack_polynomial_vector_ml_dsa(z, params_.modulus, 18);
 
         // End timing protection and log success
         timing_protection_->end_operation("sign_message_success");
@@ -502,25 +502,29 @@ std::vector<std::vector<uint32_t>> ColorSign::generate_matrix_A(const std::array
 }
 
 // Extract s1 from private key (first k polynomials)
-std::vector<std::vector<uint32_t>> ColorSign::extract_s1_from_private_key(const std::vector<uint8_t>& secret_data) const {
-    // Unpack the packed secret data to get s1, s2 (2*k polynomials)
-    auto all_polys = unpack_polynomial_vector(secret_data, 2 * params_.module_rank, params_.degree);
-
-    uint32_t k = params_.module_rank;
-
-    // Return first k polynomials (s1)
-    return std::vector<std::vector<uint32_t>>(all_polys.begin(), all_polys.begin() + k);
+std::vector<std::vector<uint32_t>> ColorSign::extract_s1_from_private_key(const ColorSignPrivateKey& private_key) const {
+    if (private_key.use_compression) {
+        auto all_secret = clwe::unpack_polynomial_vector_ml_dsa(private_key.secret_data, 2 * params_.module_rank, params_.degree, params_.modulus, 10);
+        std::vector<std::vector<uint32_t>> s1(all_secret.begin(), all_secret.begin() + params_.module_rank);
+        return s1;
+    } else {
+        size_t s1_size = params_.module_rank * params_.degree * 3;
+        std::vector<uint8_t> s1_data(private_key.secret_data.begin(), private_key.secret_data.begin() + s1_size);
+        return clwe::decode_colors_to_polynomial_vector(s1_data, params_.module_rank, params_.degree, params_.modulus);
+    }
 }
 
 // Extract s2 from private key (second k polynomials)
-std::vector<std::vector<uint32_t>> ColorSign::extract_s2_from_private_key(const std::vector<uint8_t>& secret_data) const {
-    // Unpack the packed secret data to get s1, s2 (2*k polynomials)
-    auto all_polys = unpack_polynomial_vector(secret_data, 2 * params_.module_rank, params_.degree);
-
-    uint32_t k = params_.module_rank;
-
-    // Return second k polynomials (s2)
-    return std::vector<std::vector<uint32_t>>(all_polys.begin() + k, all_polys.begin() + 2 * k);
+std::vector<std::vector<uint32_t>> ColorSign::extract_s2_from_private_key(const ColorSignPrivateKey& private_key) const {
+    if (private_key.use_compression) {
+        auto all_secret = clwe::unpack_polynomial_vector_ml_dsa(private_key.secret_data, 2 * params_.module_rank, params_.degree, params_.modulus, 10);
+        std::vector<std::vector<uint32_t>> s2(all_secret.begin() + params_.module_rank, all_secret.end());
+        return s2;
+    } else {
+        size_t s1_size = params_.module_rank * params_.degree * 3;
+        std::vector<uint8_t> s2_data(private_key.secret_data.begin() + s1_size, private_key.secret_data.end());
+        return clwe::decode_colors_to_polynomial_vector(s2_data, params_.module_rank, params_.degree, params_.modulus);
+    }
 }
 
 
@@ -636,11 +640,11 @@ std::vector<uint8_t> ColorSignature::serialize() const {
 
 ColorSignature ColorSignature::deserialize(const std::vector<uint8_t>& data, const CLWEParameters& params) {
     // ML-DSA signature format: z || h || c
-    // z size: k * n * 4 bytes (standard ML-DSA packing)
+    // z size: 6 + (k * n * 18 + 7) / 8 bytes (18-bit ML-DSA compression)
     // h size: omega bytes (hint)
     // c size: (degree + 3) / 4 bytes (packed challenge)
 
-    size_t z_size = params.module_rank * params.degree * 4;
+    size_t z_size = 6 + ((params.module_rank * params.degree * 18 + 7) / 8);
     size_t h_size = params.omega;
     size_t c_size = (params.degree + 3) / 4;
 

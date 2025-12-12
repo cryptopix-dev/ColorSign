@@ -17,9 +17,11 @@ endif()
 
 # Dependencies
 find_package(OpenSSL REQUIRED)
+find_package(WebP REQUIRED)
 
 # OpenSSL include directories
 include_directories(${OPENSSL_INCLUDE_DIR})
+include_directories(${WEBP_INCLUDE_DIRS})
 
 # Google Test
 include(FetchContent)
@@ -54,7 +56,7 @@ add_library(colorsign_macos STATIC
     src/core/version.cpp
 )
 
-target_link_libraries(colorsign_macos PRIVATE OpenSSL::Crypto)
+target_link_libraries(colorsign_macos PRIVATE OpenSSL::Crypto WebP::webpdecoder WebP::webp WebP::webpdemux WebP::libwebpmux)
 
 # macOS Security framework for secure random
 if(APPLE)

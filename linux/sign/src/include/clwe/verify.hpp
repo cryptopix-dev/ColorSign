@@ -20,7 +20,7 @@ private:
 
     // Helper methods
     std::vector<std::vector<uint32_t>> generate_matrix_A(const std::array<uint8_t, 32>& seed) const;
-    std::vector<std::vector<uint32_t>> extract_t_from_public_key(const std::vector<uint8_t>& public_data) const;
+    std::vector<std::vector<uint32_t>> extract_t_from_public_key(const ColorSignPublicKey& public_key) const;
     std::vector<std::vector<uint32_t>> compute_w_prime_fixed(const std::vector<std::vector<uint32_t>>& matrix_A,
                                                              const std::vector<std::vector<uint32_t>>& z,
                                                              const std::vector<uint8_t>& c_hash,

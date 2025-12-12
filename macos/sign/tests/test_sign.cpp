@@ -149,9 +149,9 @@ TEST_F(SignTest, SignatureStructureValidation) {
 
     clwe::ColorSignature signature = signer->sign_message(message, private_key, public_key);
 
-    // Check signature structure - using standard ML-DSA packing
-    // For ML-DSA-44: k=4, n=256, each coefficient packed as 4 bytes (little-endian)
-    uint32_t expected_z_size = params.module_rank * params.degree * 4; // 4 bytes per coefficient
+    // Check signature structure - using 8-bit color encoding
+    // For ML-DSA-44: k=4, n=256, each coefficient packed as 1 byte (8-bit grayscale)
+    uint32_t expected_z_size = params.module_rank * params.degree * 1; // 1 byte per coefficient
     EXPECT_EQ(signature.z_data.size(), expected_z_size);
 
     // h_data should have omega bytes

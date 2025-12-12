@@ -145,40 +145,36 @@ TEST_F(KeyGenTest, KeyGenerationConsistency) {
     clwe::ColorSignKeyGen keygen(params44);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // Current implementation uses standard 4-byte packing (little-endian 32-bit per coefficient)
-    // For ML-DSA-44: k=4, n=256, 4 bytes per coefficient
-    size_t expected_public_size = 4 * 256 * 4; // k * n * 4 bytes
+    // 8-bit grayscale color encoding: k=4, n=256, 1 byte per coefficient
+    size_t expected_public_size = 4 * 256 * 1; // 1024 bytes
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key size validation with dynamic bounds
-    EXPECT_GT(private_key.secret_data.size(), 8000u);
-    EXPECT_LT(private_key.secret_data.size(), 8500u);
+    // Private key secret_data: s1 + s2, each 1024 bytes
+    EXPECT_EQ(private_key.secret_data.size(), 2048u);
 }
 
 TEST_F(KeyGenTest, KeyGenerationConsistency65) {
     clwe::ColorSignKeyGen keygen(params65);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // For ML-DSA-65: k=6, n=256, 4 bytes per coefficient
-    size_t expected_public_size = 6 * 256 * 4;
+    // 8-bit grayscale color encoding: k=6, n=256, 1 byte per coefficient
+    size_t expected_public_size = 6 * 256 * 1; // 1536 bytes
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key size validation with dynamic bounds
-    EXPECT_GT(private_key.secret_data.size(), 12000u);
-    EXPECT_LT(private_key.secret_data.size(), 12500u);
+    // Private key secret_data: s1 + s2, each 1536 bytes
+    EXPECT_EQ(private_key.secret_data.size(), 3072u);
 }
 
 TEST_F(KeyGenTest, KeyGenerationConsistency87) {
     clwe::ColorSignKeyGen keygen(params87);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // For ML-DSA-87: k=8, n=256, 4 bytes per coefficient
-    size_t expected_public_size = 8 * 256 * 4;
+    // 8-bit grayscale color encoding: k=8, n=256, 1 byte per coefficient
+    size_t expected_public_size = 8 * 256 * 1; // 2048 bytes
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
 
-    // Private key size validation with dynamic bounds
-    EXPECT_GT(private_key.secret_data.size(), 16000u);
-    EXPECT_LT(private_key.secret_data.size(), 17000u);
+    // Private key secret_data: s1 + s2, each 2048 bytes
+    EXPECT_EQ(private_key.secret_data.size(), 4096u);
 }
 
 TEST_F(KeyGenTest, ErrorMessageUtility) {
