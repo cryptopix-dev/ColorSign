@@ -169,7 +169,7 @@ std::vector<std::vector<uint32_t>> ColorSignKeyGen::unpack_polynomial_data(const
 
 // Helper method to pack polynomial data with auto-compression
 std::vector<uint8_t> ColorSignKeyGen::pack_polynomial_data(const std::vector<std::vector<uint32_t>>& poly_vector) const {
-    return pack_polynomial_vector_auto(poly_vector, params_.modulus);
+    return encode_polynomial_vector_as_colors(poly_vector);
 }
 
 // Generate keypair
@@ -193,15 +193,15 @@ std::pair<ColorSignPublicKey, ColorSignPrivateKey> ColorSignKeyGen::generate_key
     // Compute tr
     auto tr = compute_tr(t, rho, K);
 
-    // Use ML-DSA compression for internal storage
+    // Use color encoding for internal storage
     auto public_data = pack_polynomial_data(t);
     std::vector<std::vector<uint32_t>> secret_polys = s1;
     secret_polys.insert(secret_polys.end(), s2.begin(), s2.end());
-    std::vector<uint8_t> secret_data = pack_polynomial_vector_ml_dsa(secret_polys, params_.modulus, 10);
+    std::vector<uint8_t> secret_data = encode_polynomial_vector_as_colors(secret_polys);
 
-    // Create keys with compression
-    ColorSignPublicKey public_key_struct{rho, K, tr, public_data, params_, true};
-    ColorSignPrivateKey private_key_struct{rho, K, tr, secret_data, params_, true};
+    // Create keys with color encoding
+    ColorSignPublicKey public_key_struct{rho, K, tr, public_data, params_, false};
+    ColorSignPrivateKey private_key_struct{rho, K, tr, secret_data, params_, false};
 
     return {public_key_struct, private_key_struct};
 }
@@ -235,11 +235,11 @@ std::pair<ColorSignPublicKey, ColorSignPrivateKey> ColorSignKeyGen::generate_key
     auto public_data = pack_polynomial_data(t);
     std::vector<std::vector<uint32_t>> secret_polys = s1;
     secret_polys.insert(secret_polys.end(), s2.begin(), s2.end());
-    std::vector<uint8_t> secret_data = pack_polynomial_vector_ml_dsa(secret_polys, params_.modulus, 10);
+    std::vector<uint8_t> secret_data = encode_polynomial_vector_as_colors(secret_polys);
 
-    // Create keys with compression
-    ColorSignPublicKey public_key_struct{rho, K, tr, public_data, params_, true};
-    ColorSignPrivateKey private_key_struct{rho, K, tr, secret_data, params_, true};
+    // Create keys with color encoding
+    ColorSignPublicKey public_key_struct{rho, K, tr, public_data, params_, false};
+    ColorSignPrivateKey private_key_struct{rho, K, tr, secret_data, params_, false};
 
     return {public_key_struct, private_key_struct};
 }
@@ -265,15 +265,15 @@ std::pair<ColorSignPublicKey, ColorSignPrivateKey> ColorSignKeyGen::generate_key
     // Compute tr
     auto tr = compute_tr(t, rho, K);
 
-    // Use ML-DSA compression for internal storage
+    // Use color encoding for internal storage
     auto public_data = pack_polynomial_data(t);
     std::vector<std::vector<uint32_t>> secret_polys = s1;
     secret_polys.insert(secret_polys.end(), s2.begin(), s2.end());
-    std::vector<uint8_t> secret_data = pack_polynomial_vector_ml_dsa(secret_polys, params_.modulus, 10);
+    std::vector<uint8_t> secret_data = encode_polynomial_vector_as_colors(secret_polys);
 
-    // Create keys with compression
-    ColorSignPublicKey public_key_struct{rho, K, tr, public_data, params_, true};
-    ColorSignPrivateKey private_key_struct{rho, K, tr, secret_data, params_, true};
+    // Create keys with color encoding
+    ColorSignPublicKey public_key_struct{rho, K, tr, public_data, params_, false};
+    ColorSignPrivateKey private_key_struct{rho, K, tr, secret_data, params_, false};
 
     return {public_key_struct, private_key_struct};
 }

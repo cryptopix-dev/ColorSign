@@ -237,10 +237,8 @@ TEST_F(KATTest, MLDSA44_KAT) {
     EXPECT_EQ(private_key.serialize(), private_key2.serialize());
 
     // Verify that the generated keys have the correct structure and sizes
-    EXPECT_GT(public_key.serialize().size(), 1000);
-    EXPECT_LT(public_key.serialize().size(), 1200);
-    EXPECT_GT(private_key.serialize().size(), 2000);
-    EXPECT_LT(private_key.serialize().size(), 2200);
+    EXPECT_EQ(public_key.serialize().size(), 1154);
+    EXPECT_EQ(private_key.serialize().size(), 2178);
 
     // Verify that the keys can be used for signing and verification
     ColorSign signer(params);
@@ -278,12 +276,9 @@ TEST_F(KATTest, MLDSA65_KAT) {
     EXPECT_EQ(public_key.serialize(), public_key2.serialize());
     EXPECT_EQ(private_key.serialize(), private_key2.serialize());
 
-    // Verify key sizes are appropriate for security level 65
-    // Just verify they're reasonable sizes, not exact values
-    EXPECT_GT(public_key.serialize().size(), 1500);
-    EXPECT_LT(public_key.serialize().size(), 1700);
-    EXPECT_GT(private_key.serialize().size(), 3000);
-    EXPECT_LT(private_key.serialize().size(), 3200);
+    // Verify key sizes are appropriate for security level 65 (color-encoded)
+    EXPECT_EQ(public_key.serialize().size(), 1666);
+    EXPECT_EQ(private_key.serialize().size(), 3202);
 
     // Verify cryptographic operations work correctly
     ColorSign signer(params);
@@ -320,12 +315,9 @@ TEST_F(KATTest, MLDSA87_KAT) {
     EXPECT_EQ(public_key.serialize(), public_key2.serialize());
     EXPECT_EQ(private_key.serialize(), private_key2.serialize());
 
-    // Verify key sizes are appropriate for security level 87
-    // Just verify they're reasonable sizes, not exact values
-    EXPECT_GT(public_key.serialize().size(), 2000);
-    EXPECT_LT(public_key.serialize().size(), 2200);
-    EXPECT_GT(private_key.serialize().size(), 4000);
-    EXPECT_LT(private_key.serialize().size(), 4200);
+    // Verify key sizes are appropriate for security level 87 (color-encoded)
+    EXPECT_EQ(public_key.serialize().size(), 2178);
+    EXPECT_EQ(private_key.serialize().size(), 4226);
 
     // Verify cryptographic operations work correctly
     ColorSign signer(params);

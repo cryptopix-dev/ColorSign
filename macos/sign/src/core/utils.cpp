@@ -969,7 +969,7 @@ std::vector<std::vector<uint32_t>> unpack_polynomial_vector_sparse_enhanced(cons
 
 // Use FIPS 204 compliant ML-DSA compression
 std::vector<uint8_t> pack_polynomial_vector_auto(const std::vector<std::vector<uint32_t>>& poly_vector, uint32_t modulus) {
-    return pack_polynomial_vector_ml_dsa(poly_vector, modulus, 13);
+    return pack_polynomial_vector_ml_dsa(poly_vector, modulus, 12);
 }
 
 // Huffman Tree Node structure

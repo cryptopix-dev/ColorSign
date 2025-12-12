@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 // Main CLWE namespace for ColorSign
 namespace clwe {
@@ -92,6 +93,40 @@ struct CLWEParameters {
             if (n % i == 0 || n % (i + 2) == 0) return false;
         }
         return true;
+    }
+
+    // Helper functions to compute expected key sizes from parameters
+    // Color encoding uses RGB format (3 bytes per coefficient)
+    size_t get_expected_public_key_size() const {
+        // public: rho(32) + K(32) + tr(64) + color_data(k*n*3)
+        return 32 + 32 + 64 + (module_rank * degree * 3);
+    }
+
+    size_t get_expected_private_key_size() const {
+        // private: rho(32) + K(32) + tr(64) + color_data(2*k*n*3)
+        return 32 + 32 + 64 + (2 * module_rank * degree * 3);
+    }
+
+    size_t get_expected_public_data_size() const {
+        // 8-bit grayscale color encoding: k*n*1 byte per coefficient
+        return module_rank * degree;
+    }
+
+    size_t get_expected_private_secret_data_size() const {
+        // Private key secret_data: s1 + s2, each k*n bytes
+        return 2 * module_rank * degree;
+    }
+
+    std::pair<size_t, size_t> get_valid_public_key_size_range() const {
+        auto expected = get_expected_public_key_size();
+        // Allow 10% variance for different encoding schemes
+        return {expected * 9 / 10, expected * 11 / 10};
+    }
+
+    std::pair<size_t, size_t> get_valid_private_key_size_range() const {
+        auto expected = get_expected_private_key_size();
+        // Allow 10% variance for different encoding schemes
+        return {expected * 9 / 10, expected * 11 / 10};
     }
 
 private:

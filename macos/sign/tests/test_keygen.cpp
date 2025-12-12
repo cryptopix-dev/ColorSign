@@ -145,36 +145,33 @@ TEST_F(KeyGenTest, KeyGenerationConsistency) {
     clwe::ColorSignKeyGen keygen(params44);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // 8-bit grayscale color encoding: k=4, n=256, 1 byte per coefficient
-    size_t expected_public_size = 4 * 256 * 1; // 1024 bytes
+    // Use computed values from parameters instead of hardcoded magic numbers
+    size_t expected_public_size = params44.get_expected_public_data_size();
+    size_t expected_private_size = params44.get_expected_private_secret_data_size();
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
-
-    // Private key secret_data: s1 + s2, each 1024 bytes
-    EXPECT_EQ(private_key.secret_data.size(), 2048u);
+    EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
 TEST_F(KeyGenTest, KeyGenerationConsistency65) {
     clwe::ColorSignKeyGen keygen(params65);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // 8-bit grayscale color encoding: k=6, n=256, 1 byte per coefficient
-    size_t expected_public_size = 6 * 256 * 1; // 1536 bytes
+    // Use computed values from parameters instead of hardcoded magic numbers
+    size_t expected_public_size = params65.get_expected_public_data_size();
+    size_t expected_private_size = params65.get_expected_private_secret_data_size();
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
-
-    // Private key secret_data: s1 + s2, each 1536 bytes
-    EXPECT_EQ(private_key.secret_data.size(), 3072u);
+    EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
 TEST_F(KeyGenTest, KeyGenerationConsistency87) {
     clwe::ColorSignKeyGen keygen(params87);
     auto [public_key, private_key] = keygen.generate_keypair();
 
-    // 8-bit grayscale color encoding: k=8, n=256, 1 byte per coefficient
-    size_t expected_public_size = 8 * 256 * 1; // 2048 bytes
+    // Use computed values from parameters instead of hardcoded magic numbers
+    size_t expected_public_size = params87.get_expected_public_data_size();
+    size_t expected_private_size = params87.get_expected_private_secret_data_size();
     EXPECT_EQ(public_key.public_data.size(), expected_public_size);
-
-    // Private key secret_data: s1 + s2, each 2048 bytes
-    EXPECT_EQ(private_key.secret_data.size(), 4096u);
+    EXPECT_EQ(private_key.secret_data.size(), expected_private_size);
 }
 
 TEST_F(KeyGenTest, ErrorMessageUtility) {

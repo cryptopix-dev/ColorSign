@@ -7,6 +7,16 @@
 
 namespace {
 
+// Test constants for better maintainability
+constexpr size_t LARGE_MESSAGE_SIZE = 10 * 1024;  // 10KB
+constexpr size_t MAX_SIGNING_ATTEMPTS = 100;
+constexpr size_t STANDARD_MESSAGE_SIZE = 16;
+
+// Helper function to create standardized test messages
+std::vector<uint8_t> create_test_message(const std::string& content) {
+    return std::vector<uint8_t>(content.begin(), content.end());
+}
+
 // Integration test fixture
 class IntegrationTest : public ::testing::Test {
 protected:
@@ -30,7 +40,7 @@ TEST_F(IntegrationTest, FullSignVerifyCycle44) {
     clwe::ColorSignVerify verifier(params44);
 
     // Test message
-    std::vector<uint8_t> message = {'I', 'n', 't', 'e', 'g', 'r', 'a', 't', 'i', 'o', 'n', ' ', 't', 'e', 's', 't'};
+    std::vector<uint8_t> message = create_test_message("Integration test");
 
     // Sign message
     clwe::ColorSignature signature = signer.sign_message(message, private_key, public_key);
@@ -48,7 +58,7 @@ TEST_F(IntegrationTest, FullSignVerifyCycle65) {
     clwe::ColorSign signer(params65);
     clwe::ColorSignVerify verifier(params65);
 
-    std::vector<uint8_t> message = {'S', 'e', 'c', 'u', 'r', 'i', 't', 'y', ' ', 'l', 'e', 'v', 'e', 'l', ' ', '6', '5'};
+    std::vector<uint8_t> message = create_test_message("Security level 65");
 
     clwe::ColorSignature signature = signer.sign_message(message, private_key, public_key);
     bool result = verifier.verify_signature(public_key, signature, message);
@@ -63,7 +73,7 @@ TEST_F(IntegrationTest, FullSignVerifyCycle87) {
     clwe::ColorSign signer(params87);
     clwe::ColorSignVerify verifier(params87);
 
-    std::vector<uint8_t> message = {'H', 'i', 'g', 'h', 'e', 's', 't', ' ', 's', 'e', 'c', 'u', 'r', 'i', 't', 'y'};
+    std::vector<uint8_t> message = create_test_message("Highest security");
 
     clwe::ColorSignature signature = signer.sign_message(message, private_key, public_key);
     bool result = verifier.verify_signature(public_key, signature, message);
@@ -87,7 +97,7 @@ TEST_F(IntegrationTest, KeySerializationIntegration) {
     clwe::ColorSign signer(params44);
     clwe::ColorSignVerify verifier(params44);
 
-    std::vector<uint8_t> message = {'S', 'e', 'r', 'i', 'a', 'l', 'i', 'z', 'a', 't', 'i', 'o', 'n', ' ', 't', 'e', 's', 't'};
+    std::vector<uint8_t> message = create_test_message("Serialization test");
 
     // Sign with deserialized private key
     clwe::ColorSignature signature = signer.sign_message(message, deserialized_private, deserialized_public);
@@ -105,7 +115,7 @@ TEST_F(IntegrationTest, SignatureSerializationIntegration) {
     clwe::ColorSign signer(params44);
     clwe::ColorSignVerify verifier(params44);
 
-    std::vector<uint8_t> message = {'S', 'i', 'g', 'n', 'a', 't', 'u', 'r', 'e', ' ', 's', 'e', 'r', 'i', 'a', 'l'};
+    std::vector<uint8_t> message = create_test_message("Signature serial");
 
     // Sign and serialize signature
     clwe::ColorSignature original_signature = signer.sign_message(message, private_key, public_key);
@@ -128,10 +138,10 @@ TEST_F(IntegrationTest, MultipleMessagesSameKey) {
     clwe::ColorSignVerify verifier(params44);
 
     std::vector<std::vector<uint8_t>> messages = {
-        {'F', 'i', 'r', 's', 't', ' ', 'm', 'e', 's', 's', 'a', 'g', 'e'},
-        {'S', 'e', 'c', 'o', 'n', 'd', ' ', 'm', 'e', 's', 's', 'a', 'g', 'e'},
-        {'T', 'h', 'i', 'r', 'd', ' ', 'm', 'e', 's', 's', 'a', 'g', 'e'},
-        {'F', 'o', 'u', 'r', 't', 'h', ' ', 'm', 'e', 's', 's', 'a', 'g', 'e'}
+        create_test_message("First message"),
+        create_test_message("Second message"),
+        create_test_message("Third message"),
+        create_test_message("Fourth message")
     };
 
     for (const auto& message : messages) {
@@ -153,7 +163,7 @@ TEST_F(IntegrationTest, DeterministicKeyGenerationIntegration) {
     clwe::ColorSign signer(params44);
     clwe::ColorSignVerify verifier(params44);
 
-    std::vector<uint8_t> message = {'D', 'e', 't', 'e', 'r', 'm', 'i', 'n', 'i', 's', 't', 'i', 'c', ' ', 't', 'e', 's', 't'};
+    std::vector<uint8_t> message = create_test_message("Deterministic test");
 
     clwe::ColorSignature signature = signer.sign_message(message, private_key, public_key);
     bool result = verifier.verify_signature(public_key, signature, message);
@@ -168,8 +178,8 @@ TEST_F(IntegrationTest, LargeMessageIntegration) {
     clwe::ColorSign signer(params44);
     clwe::ColorSignVerify verifier(params44);
 
-    // Create a large message (10KB)
-    std::vector<uint8_t> large_message(10240);
+    // Create a large message
+    std::vector<uint8_t> large_message(LARGE_MESSAGE_SIZE);
     for (size_t i = 0; i < large_message.size(); ++i) {
         large_message[i] = static_cast<uint8_t>(i % 256);
     }
@@ -207,7 +217,7 @@ TEST_F(IntegrationTest, CrossSecurityLevelFailure) {
     clwe::ColorSign signer65(params65);
     clwe::ColorSignVerify verifier65(params65);
 
-    std::vector<uint8_t> message = {'C', 'r', 'o', 's', 's', ' ', 'l', 'e', 'v', 'e', 'l'};
+    std::vector<uint8_t> message = create_test_message("Cross level");
 
     // This should fail because parameters don't match
     EXPECT_THROW(signer65.sign_message(message, private_key44, public_key44), std::invalid_argument);
@@ -226,17 +236,21 @@ TEST_F(IntegrationTest, KnownAnswerTestDeterministic) {
     clwe::ColorSign signer(params44);
     clwe::ColorSignVerify verifier(params44);
 
-    std::vector<uint8_t> message = {'K', 'n', 'o', 'w', 'n', ' ', 'a', 'n', 's', 'w', 'e', 'r', ' ', 't', 'e', 's', 't'};
+    std::vector<uint8_t> message = create_test_message("Known answer test");
 
     // Sign multiple times - should eventually succeed (due to rejection sampling)
     clwe::ColorSignature signature;
     bool signed_successfully = false;
-    for (int attempts = 0; attempts < 100 && !signed_successfully; ++attempts) {
+    std::string last_error;
+    for (size_t attempts = 0; attempts < MAX_SIGNING_ATTEMPTS && !signed_successfully; ++attempts) {
         try {
             signature = signer.sign_message(message, private_key, public_key);
             signed_successfully = true;
+        } catch (const std::exception& e) {
+            last_error = e.what();
+            // Continue trying for rejection sampling failures
         } catch (...) {
-            // Continue trying
+            last_error = "Unknown error during signing";
         }
     }
 

@@ -57,8 +57,8 @@ bool ColorSignVerify::verify_signature_basic(const ColorSignPublicKey& public_ke
                                              const ColorSignature& signature,
                                              const std::vector<uint8_t>& message,
                                              const std::vector<uint8_t>& context) const {
-    // Decode z from signature using 18-bit encoding
-    std::vector<std::vector<uint32_t>> z = unpack_polynomial_vector_ml_dsa(signature.z_data, params_.module_rank, params_.degree, params_.modulus, 18);
+    // Decode z from signature using uncompressed 32-bit unpacking
+    std::vector<std::vector<uint32_t>> z = unpack_polynomial_vector(signature.z_data, params_.module_rank, params_.degree);
 
     // Check z bounds: ||z||_∞ < γ₁ - β
     if (!check_z_bounds(z)) {
@@ -287,7 +287,7 @@ bool ColorSignVerify::validate_cryptographic_integrity_final(const ColorSignPubl
 
     // Validate z data can be decoded and re-encoded consistently
     try {
-        std::vector<std::vector<uint32_t>> z_decoded = unpack_polynomial_vector_ml_dsa(signature.z_data, params_.module_rank, params_.degree, params_.modulus, 18);
+        std::vector<std::vector<uint32_t>> z_decoded = unpack_polynomial_vector(signature.z_data, params_.module_rank, params_.degree);
         
         // Basic sanity check on decoded data
         if (z_decoded.size() != params_.module_rank) {
@@ -380,7 +380,7 @@ std::vector<std::vector<uint32_t>> ColorSignVerify::generate_matrix_A(const std:
 // Extract t from public key
 std::vector<std::vector<uint32_t>> ColorSignVerify::extract_t_from_public_key(const ColorSignPublicKey& public_key) const {
     if (public_key.use_compression) {
-        auto t = clwe::unpack_polynomial_vector_ml_dsa(public_key.public_data, params_.module_rank, params_.degree, params_.modulus, 10);
+        auto t = clwe::unpack_polynomial_vector_ml_dsa(public_key.public_data, params_.module_rank, params_.degree, params_.modulus, 12);
         if (!t.empty() && !t[0].empty()) {
             std::cout << "DEBUG: t[0] first 5 coeffs: ";
             for (size_t i = 0; i < std::min(size_t(5), t[0].size()); ++i) std::cout << t[0][i] << " ";

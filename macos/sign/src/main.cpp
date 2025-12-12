@@ -62,7 +62,7 @@ int main() {
         // Convert compressed data to RGB for WebP display
         std::vector<uint8_t> public_display_data;
         if (public_key.use_compression) {
-            auto t = clwe::unpack_polynomial_vector_ml_dsa(public_key.public_data, params.module_rank, params.degree, params.modulus, 13);
+            auto t = clwe::unpack_polynomial_vector_ml_dsa(public_key.public_data, params.module_rank, params.degree, params.modulus, 12);
             public_display_data = clwe::encode_polynomial_vector_as_colors(t, params.modulus);
         } else {
             public_display_data = public_key.public_data;
@@ -71,11 +71,9 @@ int main() {
 
         std::vector<uint8_t> private_display_data;
         if (private_key.use_compression) {
-            size_t poly_size = (params.module_rank * params.degree * 10 + 7) / 8;
-            std::vector<uint8_t> s1_data(private_key.secret_data.begin(), private_key.secret_data.begin() + poly_size);
-            std::vector<uint8_t> s2_data(private_key.secret_data.begin() + poly_size, private_key.secret_data.end());
-            auto s1 = clwe::unpack_polynomial_vector_ml_dsa(s1_data, params.module_rank, params.degree, params.modulus, 10);
-            auto s2 = clwe::unpack_polynomial_vector_ml_dsa(s2_data, params.module_rank, params.degree, params.modulus, 10);
+            auto all_secret = clwe::unpack_polynomial_vector_ml_dsa(private_key.secret_data, 2 * params.module_rank, params.degree, params.modulus, 4);
+            std::vector<std::vector<uint32_t>> s1(all_secret.begin(), all_secret.begin() + params.module_rank);
+            std::vector<std::vector<uint32_t>> s2(all_secret.begin() + params.module_rank, all_secret.end());
             auto s1_colors = clwe::encode_polynomial_vector_as_colors(s1, params.modulus);
             auto s2_colors = clwe::encode_polynomial_vector_as_colors(s2, params.modulus);
             private_display_data = s1_colors;

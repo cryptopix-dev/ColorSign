@@ -18,6 +18,111 @@ ColorSign is a high-performance, production-ready implementation of the Module-L
 - **macOS Native**: Optimized for macOS with Apple Silicon support
 - **Comprehensive Testing**: Full test suite with Known Answer Tests (KAT) vectors
 
+## 🎨 Pixel-Based Key Functionality
+
+ColorSign introduces an innovative **pixel-based key encoding system** that transforms cryptographic polynomials into visual RGB pixel representations. This feature provides enhanced security through novel encoding techniques while enabling unique visualization and storage capabilities.
+
+### How It Works
+
+The pixel-based system encodes polynomial coefficients into RGB color data where each pixel represents up to three coefficients:
+
+- **Encoding Process**: Polynomial coefficients are reduced modulo the cryptographic modulus and packed into RGB channels (R, G, B)
+- **Pixel Structure**: Each 8-bit color channel stores one coefficient value (0-255)
+- **Visualization**: Keys can be rendered as images for debugging, education, or steganographic purposes
+
+### Key Benefits
+
+- **Enhanced Security**: Novel encoding provides additional obfuscation layer
+- **Visual Debugging**: Keys can be visualized as images for cryptographic analysis
+- **Compact Storage**: Efficient representation of large polynomial vectors
+- **Steganography**: Potential for hiding cryptographic data in images
+- **Cross-Platform Compatibility**: Works across all supported platforms (macOS, Windows, Linux)
+
+### Technical Details
+
+#### Basic Encoding
+```cpp
+// Encode a polynomial into RGB color data
+std::vector<uint8_t> color_data = encode_polynomial_as_colors(polynomial, modulus);
+
+// Each coefficient becomes a pixel channel value
+// coefficient % modulus -> 8-bit color value (0-255)
+```
+
+#### Vector Encoding
+```cpp
+// Encode multiple polynomials (key components)
+std::vector<uint8_t> color_key = encode_polynomial_vector_as_colors(poly_vector, modulus);
+
+// Supports automatic compression for sparse polynomials
+std::vector<uint8_t> compressed = encode_polynomial_vector_as_colors_auto(poly_vector, modulus);
+```
+
+#### Decoding Back to Polynomials
+```cpp
+// Decode RGB data back to polynomial coefficients
+std::vector<uint32_t> polynomial = decode_colors_to_polynomial(color_data, modulus);
+
+// Decode multiple polynomials from color data
+std::vector<std::vector<uint32_t>> poly_vector =
+    decode_colors_to_polynomial_vector(color_data, k, n, modulus);
+```
+
+### Advanced Features
+
+#### Compression Integration
+- **Variable-Length Encoding**: Efficient storage for sparse polynomials
+- **Huffman Coding**: Adaptive compression for optimal space usage
+- **Dual-Format Support**: Simultaneous cryptographic and visual representations
+
+#### On-Demand Color Generation
+```cpp
+// Enable on-demand color generation for compressed keys
+std::vector<uint8_t> dual_format = encode_polynomial_vector_with_color_integration(
+    poly_vector, modulus, true /* enable_on_demand_color */
+);
+
+// Generate color representation from compressed data
+std::vector<uint8_t> color_image = generate_color_from_dual_format(dual_format);
+```
+
+### Usage in Key Generation
+
+The pixel-based encoding is integrated into ColorSign's key generation process:
+
+```cpp
+// Keys are stored using color encoding internally
+auto [public_key, private_key] = keygen.generate_keypair();
+
+// Public and private key data contains color-encoded polynomials
+std::vector<uint8_t> public_color_data = public_key.public_data;
+std::vector<uint8_t> private_color_data = private_key.secret_data;
+```
+
+### Visualization Example
+
+Keys can be visualized as images where:
+- **Dark pixels**: Represent low coefficient values (near zero)
+- **Bright pixels**: Represent high coefficient values
+- **Color patterns**: Reflect the mathematical structure of the polynomials
+- **Image dimensions**: Depend on polynomial degree and vector size
+
+### Security Considerations
+
+- **Information Preservation**: Encoding/decoding is lossless for cryptographic operations
+- **No Security Degradation**: Color representation doesn't weaken the underlying cryptography
+- **Additional Obfuscation**: Visual encoding provides secondary protection layer
+- **Format Detection**: Multiple encoding formats supported with automatic detection
+
+### Performance Characteristics
+
+- **Encoding Speed**: Fast conversion with minimal computational overhead
+- **Storage Efficiency**: Variable compression ratios based on polynomial sparsity
+- **Memory Usage**: Compact representation suitable for resource-constrained environments
+- **Platform Optimization**: SIMD-accelerated operations on supported architectures
+
+This pixel-based functionality makes ColorSign unique among post-quantum signature schemes, combining mathematical rigor with innovative visual cryptography techniques.
+
 ## 📋 Table of Contents
 
 - [Installation](#installation)

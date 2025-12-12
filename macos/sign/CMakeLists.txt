@@ -83,6 +83,14 @@ target_link_libraries(generate_kat_vectors PRIVATE colorsign_macos)
 add_executable(generate_all_kat_vectors generate_all_kat_vectors.cpp)
 target_link_libraries(generate_all_kat_vectors PRIVATE colorsign_macos)
 
+# Key image generator executable
+add_executable(generate_key_images generate_key_images.cpp)
+target_link_libraries(generate_key_images PRIVATE colorsign_macos)
+
+# Key image test executable
+add_executable(test_key_images test_key_images.cpp)
+target_link_libraries(test_key_images PRIVATE colorsign_macos)
+
 # Tests
 enable_testing()
 

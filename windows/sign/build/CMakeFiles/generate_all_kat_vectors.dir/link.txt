@@ -1,3 +1,0 @@
-"C:\Program Files\CMake\bin\cmake.exe" -E rm -f CMakeFiles\generate_all_kat_vectors.dir/objects.a
-C:\ProgramData\mingw64\mingw64\bin\ar.exe qc CMakeFiles\generate_all_kat_vectors.dir/objects.a @CMakeFiles\generate_all_kat_vectors.dir\objects1.rsp
-C:\ProgramData\mingw64\mingw64\bin\g++.exe -Wl,--whole-archive CMakeFiles\generate_all_kat_vectors.dir/objects.a -Wl,--no-whole-archive -o generate_all_kat_vectors.exe -Wl,--out-implib,libgenerate_all_kat_vectors.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\generate_all_kat_vectors.dir\linkLibs.rsp
