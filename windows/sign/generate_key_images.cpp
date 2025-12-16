@@ -8,6 +8,7 @@
 #include <cmath>
 #include <webp/encode.h>
 #include <fstream>
+#include <string>
 
 bool save_webp_file(const std::vector<uint8_t>& data, const std::string& filename) {
     if (data.empty()) return false;
@@ -51,7 +52,15 @@ bool save_webp_file(const std::vector<uint8_t>& data, const std::string& filenam
     return true;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string output_dir = ".";
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "-d" && i + 1 < argc) {
+            output_dir = argv[i + 1];
+            ++i;
+        }
+    }
+
     try {
         clwe::CLWEParameters params(44);
         clwe::ColorSignKeyGen keygen(params);
@@ -67,16 +76,16 @@ int main() {
 
         // Save as bin for comparison
         {
-            std::ofstream file("public_key.bin", std::ios::binary);
+            std::ofstream file(output_dir + "/public_key.bin", std::ios::binary);
             file.write(reinterpret_cast<const char*>(public_serialized.data()), public_serialized.size());
         }
         {
-            std::ofstream file("private_key.bin", std::ios::binary);
+            std::ofstream file(output_dir + "/private_key.bin", std::ios::binary);
             file.write(reinterpret_cast<const char*>(private_serialized.data()), private_serialized.size());
         }
 
         std::cout << "Saving public key as public_key.webp..." << std::endl;
-        if (save_webp_file(public_serialized, "public_key.webp")) {
+        if (save_webp_file(public_serialized, output_dir + "/public_key.webp")) {
             std::cout << "Public key saved successfully!" << std::endl;
         } else {
             std::cout << "Failed to save public key!" << std::endl;
@@ -84,7 +93,7 @@ int main() {
         }
 
         std::cout << "Saving private key as private_key.webp..." << std::endl;
-        if (save_webp_file(private_serialized, "private_key.webp")) {
+        if (save_webp_file(private_serialized, output_dir + "/private_key.webp")) {
             std::cout << "Private key saved successfully!" << std::endl;
         } else {
             std::cout << "Failed to save private key!" << std::endl;
@@ -92,8 +101,8 @@ int main() {
         }
 
         std::cout << "All keys saved as WebP images!" << std::endl;
-        std::cout << "Public key image: public_key.webp" << std::endl;
-        std::cout << "Private key image: private_key.webp" << std::endl;
+        std::cout << "Public key image: " << output_dir << "/public_key.webp" << std::endl;
+        std::cout << "Private key image: " << output_dir << "/private_key.webp" << std::endl;
 
         return 0;
     } catch (const std::exception& e) {

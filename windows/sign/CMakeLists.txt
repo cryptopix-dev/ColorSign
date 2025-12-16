@@ -25,15 +25,16 @@ set(OPENSSL_USE_STATIC_LIBS TRUE)
 # Find OpenSSL - should work with MinGW's built-in version
 find_package(OpenSSL REQUIRED)
 
-# Find WebP manually
+# Find WebP manually - prefer static libraries
 find_path(WEBP_INCLUDE_DIR webp/types.h PATHS C:/ProgramData/mingw64/mingw64/include C:/msys64/mingw64/include)
-find_library(WEBP_LIBRARY webp PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
-find_library(WEBPDEMUX_LIBRARY webpdemux PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
-find_library(WEBPMUX_LIBRARY webpmux PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
+find_library(WEBP_LIBRARY libwebp.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
+find_library(WEBPDEMUX_LIBRARY libwebpdemux.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
+find_library(WEBPMUX_LIBRARY libwebpmux.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
+find_library(SHARPYUV_LIBRARY libsharpyuv.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
 
 if(WEBP_INCLUDE_DIR AND WEBP_LIBRARY)
     set(WEBP_FOUND TRUE)
-    set(WEBP_LIBRARIES ${WEBP_LIBRARY} ${WEBPDEMUX_LIBRARY} ${WEBPMUX_LIBRARY})
+    set(WEBP_LIBRARIES ${WEBP_LIBRARY} ${WEBPDEMUX_LIBRARY} ${WEBPMUX_LIBRARY} ${SHARPYUV_LIBRARY})
 else()
     set(WEBP_FOUND FALSE)
 endif()

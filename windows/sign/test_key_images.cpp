@@ -6,6 +6,7 @@
 #include <vector>
 #include <fstream>
 #include <webp/decode.h>
+#include <string>
 
 std::vector<uint8_t> load_webp_file(const std::string& filename) {
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
@@ -62,22 +63,30 @@ std::vector<uint8_t> load_bin_file(const std::string& filename) {
     return buffer;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string input_dir = ".";
+    for (int i = 1; i < argc; ++i) {
+        if (std::string(argv[i]) == "-d" && i + 1 < argc) {
+            input_dir = argv[i + 1];
+            ++i;
+        }
+    }
+
     try {
         clwe::CLWEParameters params(44);
 
         std::cout << "Loading public key from public_key.bin..." << std::endl;
-        auto public_bin = load_bin_file("public_key.bin");
+        auto public_bin = load_bin_file(input_dir + "/public_key.bin");
         auto public_key_bin = clwe::ColorSignPublicKey::deserialize(public_bin, params);
         std::cout << "Public key from bin loaded and deserialized successfully!" << std::endl;
 
         std::cout << "Loading private key from private_key.bin..." << std::endl;
-        auto private_bin = load_bin_file("private_key.bin");
+        auto private_bin = load_bin_file(input_dir + "/private_key.bin");
         auto private_key_bin = clwe::ColorSignPrivateKey::deserialize(private_bin, params);
         std::cout << "Private key from bin loaded and deserialized successfully!" << std::endl;
 
         std::cout << "Loading public key from public_key.webp..." << std::endl;
-        auto public_rgb = load_webp_file("public_key.webp");
+        auto public_rgb = load_webp_file(input_dir + "/public_key.webp");
         std::cout << "WebP data size: " << public_rgb.size() << ", bin size: " << public_bin.size() << std::endl;
         if (public_rgb == public_bin) {
             std::cout << "WebP data matches bin data!" << std::endl;
@@ -89,7 +98,7 @@ int main() {
         std::cout << "Public key loaded and deserialized successfully!" << std::endl;
 
         std::cout << "Loading private key from private_key.webp..." << std::endl;
-        auto private_rgb = load_webp_file("private_key.webp");
+        auto private_rgb = load_webp_file(input_dir + "/private_key.webp");
         std::cout << "WebP data size: " << private_rgb.size() << ", bin size: " << private_bin.size() << std::endl;
         if (private_rgb == private_bin) {
             std::cout << "WebP data matches bin data!" << std::endl;
