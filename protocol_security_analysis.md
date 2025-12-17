@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This report presents a comprehensive analysis of the protocol security of ColorSign, focusing on key generation, signing, verification, and COSE integration protocols. The analysis evaluates the security, compliance, and robustness of the cryptographic protocols against various attack vectors.
+This report presents a comprehensive analysis of the protocol security of ColorSign, focusing on key generation, signing, verification, and COSE integration protocols. The analysis evaluates the security, compliance, and robustness of the cryptographic protocols against various attack vectors .
 
 ## 1. Key Generation Protocol Analysis
 
