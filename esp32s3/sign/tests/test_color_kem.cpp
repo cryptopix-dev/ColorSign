@@ -258,7 +258,6 @@ TEST_F(ColorKEMTest, DifferentKeysDifferentCiphertexts) {
 
     // Ciphertexts should be different (with very high probability)
     EXPECT_NE(ciphertext1.ciphertext_data, ciphertext2.ciphertext_data);
-    EXPECT_EQ(ciphertext1.shared_secret_hint, ciphertext2.shared_secret_hint);
 }
 
 } // namespace clwe

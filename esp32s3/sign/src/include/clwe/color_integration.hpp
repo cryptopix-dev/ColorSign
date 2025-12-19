@@ -76,6 +76,10 @@ std::vector<uint8_t> generate_color_from_dual_format(const std::vector<uint8_t>&
 std::vector<uint8_t> encode_polynomial_vector_with_color_integration(const std::vector<std::vector<uint32_t>>& poly_vector, uint32_t modulus, bool enable_on_demand_color = true);
 std::vector<std::vector<uint32_t>> decode_polynomial_vector_with_color_integration(const std::vector<uint8_t>& color_integrated_data, uint32_t modulus);
 
+// KEM key specific color encoding functions
+std::vector<uint8_t> encode_color_kem_key_as_colors_compressed(const std::vector<uint8_t>& key_data);
+std::vector<uint8_t> decode_colors_to_color_kem_key_compressed(const std::vector<uint8_t>& color_data, size_t expected_size);
+
 } // namespace clwe
 
 #endif // CLWE_COLOR_INTEGRATION_HPP

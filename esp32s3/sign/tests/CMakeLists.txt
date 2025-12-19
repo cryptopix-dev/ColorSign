@@ -1,5 +1,8 @@
 # Tests CMakeLists.txt
 
+cmake_minimum_required(VERSION 3.16)
+project(clwe_tests)
+
 # Include directories for tests
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src/include/clwe)
@@ -27,6 +30,7 @@ add_library(clwe_test STATIC
     ../src/core/verify.cpp
     ../src/core/cose.cpp
     ../src/core/color_integration.cpp
+    ../src/core/color_kem.cpp
     ../src/core/utils.cpp
     ../src/core/security_utils.cpp
     ../src/core/kat.cpp
@@ -72,10 +76,14 @@ target_link_libraries(test_performance_metrics PRIVATE clwe_test gtest_main)
 add_executable(test_known_answer_tests test_known_answer_tests.cpp nist_kat_parser.cpp)
 target_link_libraries(test_known_answer_tests PRIVATE clwe_test gtest_main CURL::libcurl)
 
+add_executable(test_color_kem test_color_kem.cpp)
+target_link_libraries(test_color_kem PRIVATE clwe_test gtest_main)
+
 # Register tests
 add_test(NAME ColorValueTests COMMAND test_color_value)
 add_test(NAME CLWEParametersTests COMMAND test_clwe_parameters)
 add_test(NAME KnownAnswerTests COMMAND test_known_answer_tests)
+add_test(NAME ColorKEMTests COMMAND test_color_kem)
 
 # Fuzzing targets (only if fuzzing is enabled)
 if(ENABLE_FUZZING)

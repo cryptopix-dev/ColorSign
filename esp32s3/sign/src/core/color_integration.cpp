@@ -380,4 +380,136 @@ std::vector<std::vector<uint32_t>> decode_polynomial_vector_with_color_integrati
     }
 }
 
+// Compressed color encoding adapted for KEM keys using variable-length encoding
+std::vector<uint8_t> encode_color_kem_key_as_colors_compressed(const std::vector<uint8_t>& key_data) {
+    std::vector<uint8_t> compressed;
+    compressed.reserve(key_data.size() + 8);
+
+    // Add format version and compression flag for KEM key color-compatible compression
+    compressed.push_back(0x01); // Version 1
+    compressed.push_back(0x07); // Compression flag (7 = KEM key color-compatible compressed)
+
+    // Store key data size
+    uint32_t data_size = key_data.size();
+    compressed.push_back(static_cast<uint8_t>(data_size >> 24));
+    compressed.push_back(static_cast<uint8_t>(data_size >> 16));
+    compressed.push_back(static_cast<uint8_t>(data_size >> 8));
+    compressed.push_back(static_cast<uint8_t>(data_size & 0xFF));
+
+    // Compress the coefficients using variable-length encoding
+    // Each coefficient is 4 bytes (uint32_t big-endian)
+    for (size_t i = 0; i < key_data.size(); i += 4) {
+        if (i + 3 >= key_data.size()) break;
+
+        // Reconstruct the uint32_t coefficient from big-endian bytes
+        uint32_t coeff = (static_cast<uint32_t>(key_data[i]) << 24) |
+                        (static_cast<uint32_t>(key_data[i + 1]) << 16) |
+                        (static_cast<uint32_t>(key_data[i + 2]) << 8) |
+                        static_cast<uint32_t>(key_data[i + 3]);
+
+        // Apply variable-length encoding similar to ColorSign
+        if (coeff == 0) {
+            compressed.push_back(0x00); // Single byte for zero
+        } else if (coeff < 0x40) {
+            compressed.push_back(static_cast<uint8_t>(coeff | 0x80)); // 1 byte (0x80-0xBF)
+        } else if (coeff < 0x2000) {
+            compressed.push_back(static_cast<uint8_t>((coeff >> 8) | 0xC0)); // 2 bytes (0xC0-0xDF)
+            compressed.push_back(static_cast<uint8_t>(coeff & 0xFF));
+        } else if (coeff < 0x100000) {
+            compressed.push_back(static_cast<uint8_t>((coeff >> 16) | 0xE0)); // 3 bytes (0xE0-0xEF)
+            compressed.push_back(static_cast<uint8_t>((coeff >> 8) & 0xFF));
+            compressed.push_back(static_cast<uint8_t>(coeff & 0xFF));
+        } else {
+            // For larger values, use 5 bytes (0xF0 + 4 bytes)
+            compressed.push_back(0xF0);
+            compressed.push_back(static_cast<uint8_t>((coeff >> 24) & 0xFF));
+            compressed.push_back(static_cast<uint8_t>((coeff >> 16) & 0xFF));
+            compressed.push_back(static_cast<uint8_t>((coeff >> 8) & 0xFF));
+            compressed.push_back(static_cast<uint8_t>(coeff & 0xFF));
+        }
+    }
+
+    return compressed;
+}
+
+// Decode compressed KEM key color data
+std::vector<uint8_t> decode_colors_to_color_kem_key_compressed(const std::vector<uint8_t>& color_data, size_t expected_size) {
+    if (color_data.size() < 8) {
+        throw std::invalid_argument("Compressed color data too small");
+    }
+
+    size_t offset = 0;
+    uint8_t version = color_data[offset++];
+    uint8_t compression_flag = color_data[offset++];
+
+    // Validate version and compression flag
+    if (version != 0x01 || compression_flag != 0x07) {
+        throw std::invalid_argument("Unsupported KEM key color-compatible compression format");
+    }
+
+    // Read data size
+    uint32_t data_size = (static_cast<uint32_t>(color_data[offset]) << 24) |
+                        (static_cast<uint32_t>(color_data[offset + 1]) << 16) |
+                        (static_cast<uint32_t>(color_data[offset + 2]) << 8) |
+                        color_data[offset + 3];
+    offset += 4;
+
+    if (data_size != expected_size) {
+        throw std::invalid_argument("Data size mismatch in compressed color data");
+    }
+
+    // Decompress the coefficients using variable-length decoding
+    std::vector<uint8_t> key_data;
+    key_data.reserve(data_size);
+
+    size_t num_coeffs = data_size / 4; // Each coefficient is 4 bytes
+    size_t coeff_idx = 0;
+
+    while (coeff_idx < num_coeffs && offset < color_data.size()) {
+        if (offset >= color_data.size()) {
+            throw std::invalid_argument("Truncated compressed color data");
+        }
+
+        uint8_t first_byte = color_data[offset++];
+        uint32_t coeff = 0;
+
+        if (first_byte == 0x00) {
+            coeff = 0;
+        } else if ((first_byte & 0xC0) == 0x80) {
+            // 1-byte encoding: 0x80-0xBF
+            coeff = first_byte & 0x3F;
+        } else if ((first_byte & 0xE0) == 0xC0) {
+            // 2-byte encoding: 0xC0-0xDF
+            if (offset >= color_data.size()) throw std::invalid_argument("Truncated compressed color data");
+            coeff = ((first_byte & 0x1F) << 8) | color_data[offset++];
+        } else if ((first_byte & 0xF0) == 0xE0) {
+            // 3-byte encoding: 0xE0-0xEF
+            if (offset + 1 >= color_data.size()) throw std::invalid_argument("Truncated compressed color data");
+            coeff = ((first_byte & 0x0F) << 16) | (color_data[offset] << 8) | color_data[offset + 1];
+            offset += 2;
+        } else if (first_byte == 0xF0) {
+            // 5-byte encoding: 0xF0 + 4 bytes
+            if (offset + 3 >= color_data.size()) throw std::invalid_argument("Truncated compressed color data");
+            coeff = (color_data[offset] << 24) | (color_data[offset + 1] << 16) | (color_data[offset + 2] << 8) | color_data[offset + 3];
+            offset += 4;
+        } else {
+            throw std::invalid_argument("Invalid KEM key color-compatible compression encoding");
+        }
+
+        // Convert back to 4-byte big-endian representation
+        key_data.push_back(static_cast<uint8_t>((coeff >> 24) & 0xFF));
+        key_data.push_back(static_cast<uint8_t>((coeff >> 16) & 0xFF));
+        key_data.push_back(static_cast<uint8_t>((coeff >> 8) & 0xFF));
+        key_data.push_back(static_cast<uint8_t>(coeff & 0xFF));
+
+        coeff_idx++;
+    }
+
+    if (key_data.size() != expected_size) {
+        throw std::invalid_argument("Decompressed key data size does not match expected size: got " + std::to_string(key_data.size()) + ", expected " + std::to_string(expected_size));
+    }
+
+    return key_data;
+}
+
 } // namespace clwe

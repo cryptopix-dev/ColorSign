@@ -1,6 +1,6 @@
 #include "clwe/color_kem.hpp"
-#include "clwe/shake_sampler.hpp"
-#include "clwe/utils.hpp"
+#include "shake_sampler.hpp"
+#include "utils.hpp"
 #include "clwe/color_integration.hpp"
 #include <random>
 #include <cstring>
@@ -12,7 +12,7 @@ namespace clwe {
 
 ColorKEM::ColorKEM(const CLWEParameters& params)
     : params_(params) {
-    color_ntt_engine_ = std::unique_ptr<ColorNTTEngine>(new ColorNTTEngine(params_.modulus, params_.degree));
+    color_ntt_engine_ = std::make_unique<ColorNTTEngine>(params_.modulus, params_.degree);
 }
 
 ColorKEM::~ColorKEM() = default;
@@ -415,7 +415,13 @@ std::pair<ColorPublicKey, ColorPrivateKey> ColorKEM::keygen_deterministic(const 
     auto public_key_colors = generate_public_key(secret_key_colors, matrix_A, error_vector);
 
 
-    std::vector<uint8_t> secret_data = pack_polynomial_vector_ml_dsa(secret_key_colors, params_.modulus, 4);
+    std::vector<uint8_t> secret_data;
+    for (const auto& poly : secret_key_colors) {
+        for (const auto& coeff : poly) {
+            auto bytes = color_secret_to_bytes(coeff);
+            secret_data.insert(secret_data.end(), bytes.begin(), bytes.end());
+        }
+    }
 
     std::vector<uint8_t> public_data;
     for (const auto& poly : public_key_colors) {
@@ -588,14 +594,14 @@ ColorValue ColorKEM::decapsulate(const ColorPublicKey& public_key,
         throw std::invalid_argument("Private key data cannot be empty");
     }
 
-    // Unpack private key using ML-DSA format
-    std::vector<std::vector<uint32_t>> secret_key_polys = unpack_polynomial_vector_ml_dsa(private_key.secret_data, params_.module_rank, params_.degree, params_.modulus, 4);
-
-    // Convert to ColorValue
     std::vector<std::vector<ColorValue>> secret_key_colors(params_.module_rank, std::vector<ColorValue>(params_.degree));
+    size_t idx_sk = 0;
     for (size_t i = 0; i < params_.module_rank; ++i) {
         for (size_t d = 0; d < params_.degree; ++d) {
-            secret_key_colors[i][d] = ColorValue::from_math_value(secret_key_polys[i][d]);
+            std::vector<uint8_t> bytes(private_key.secret_data.begin() + idx_sk,
+                                        private_key.secret_data.begin() + idx_sk + 4);
+            secret_key_colors[i][d] = bytes_to_color_secret(bytes);
+            idx_sk += 4;
         }
     }
     // std::cout << "DEBUG DECAP: Secret key colors (" << secret_key_colors.size() << " elements):" << std::endl;
@@ -728,7 +734,7 @@ std::vector<uint8_t> ColorPublicKey::serialize() const {
     data.insert(data.end(), seed.begin(), seed.end());
 
     // Use compressed encoding for public data
-    auto compressed_data = encode_polynomial_vector_as_colors_compressed(public_data, params.modulus);
+    auto compressed_data = encode_color_kem_key_as_colors_compressed(public_data);
     data.insert(data.end(), compressed_data.begin(), compressed_data.end());
 
     return data;
@@ -766,7 +772,7 @@ ColorPublicKey ColorPublicKey::deserialize(const std::vector<uint8_t>& data, con
 
         // Decompress the public data
         std::vector<uint8_t> compressed_data(data.begin() + offset, data.end());
-        key.public_data = decode_colors_to_polynomial_vector_compressed(compressed_data, params.module_rank, params.degree, params.modulus);
+        key.public_data = decode_colors_to_color_kem_key_compressed(compressed_data, original_size);
         key.params = params;
 
         // Validate public data size (should be multiple of 4 for ColorValue serialization and non-empty)
@@ -809,7 +815,7 @@ std::vector<uint8_t> ColorPrivateKey::serialize() const {
     data.push_back(static_cast<uint8_t>(original_size & 0xFF));
 
     // Use compressed encoding for secret data
-    auto compressed_data = encode_polynomial_vector_as_colors_compressed(secret_data, params.modulus);
+    auto compressed_data = encode_color_kem_key_as_colors_compressed(secret_data);
     data.insert(data.end(), compressed_data.begin(), compressed_data.end());
 
     return data;
@@ -847,7 +853,7 @@ ColorPrivateKey ColorPrivateKey::deserialize(const std::vector<uint8_t>& data, c
 
             // Decompress the secret data
             std::vector<uint8_t> compressed_data(data.begin() + offset, data.end());
-            key.secret_data = decode_colors_to_polynomial_vector_compressed(compressed_data, params.module_rank, params.degree, params.modulus);
+            key.secret_data = decode_colors_to_color_kem_key_compressed(compressed_data, original_size);
             key.params = params;
 
             // Validate secret data size (should be multiple of 4 for ColorValue serialization and non-empty)
