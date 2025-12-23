@@ -24,6 +24,7 @@
 
 #ifdef ESP_PLATFORM
 #include <esp_system.h>
+#include <esp_random.h>
 #endif
 
 namespace clwe {
