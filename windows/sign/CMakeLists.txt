@@ -19,18 +19,19 @@ endif()
 # SIMD optimization flags will be set via toolchain file
 
 # Dependencies - Use MinGW's built-in OpenSSL
-set(OPENSSL_ROOT_DIR "C:/ProgramData/mingw64/mingw64/opt")
-set(OPENSSL_USE_STATIC_LIBS TRUE)
+# Dependencies - OpenSSL found via toolchain/environment
+
 
 # Find OpenSSL - should work with MinGW's built-in version
 find_package(OpenSSL REQUIRED)
 
 # Find WebP manually - prefer static libraries
-find_path(WEBP_INCLUDE_DIR webp/types.h PATHS C:/ProgramData/mingw64/mingw64/include C:/msys64/mingw64/include)
-find_library(WEBP_LIBRARY libwebp.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
-find_library(WEBPDEMUX_LIBRARY libwebpdemux.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
-find_library(WEBPMUX_LIBRARY libwebpmux.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
-find_library(SHARPYUV_LIBRARY libsharpyuv.a PATHS C:/ProgramData/mingw64/mingw64/lib C:/msys64/mingw64/lib)
+# Find WebP
+find_path(WEBP_INCLUDE_DIR webp/types.h)
+find_library(WEBP_LIBRARY NAMES webp libwebp)
+find_library(WEBPDEMUX_LIBRARY NAMES webpdemux libwebpdemux)
+find_library(WEBPMUX_LIBRARY NAMES webpmux libwebpmux)
+find_library(SHARPYUV_LIBRARY NAMES sharpyuv libsharpyuv)
 
 if(WEBP_INCLUDE_DIR AND WEBP_LIBRARY)
     set(WEBP_FOUND TRUE)
@@ -59,9 +60,8 @@ if(NOT GTest_FOUND)
     # For Windows: Prevent overriding the parent project's compiler/linker on Windows
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-    # Set compiler for subproject before making it available
-    set(CMAKE_C_COMPILER "C:/ProgramData/mingw64/mingw64/bin/gcc.exe" CACHE FILEPATH "C compiler" FORCE)
-    set(CMAKE_CXX_COMPILER "C:/ProgramData/mingw64/mingw64/bin/g++.exe" CACHE FILEPATH "C++ compiler" FORCE)
+    # Compiler settings inherited from main project
+
 
     # Suppress CMake deprecation warnings from googletest
     set(CMAKE_POLICY_VERSION_MINIMUM 3.16)
@@ -73,7 +73,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src/core)
 
 # Library target
-add_library(colorsign STATIC
+add_library(colorsign
     src/core/parameters.cpp
     src/core/keygen.cpp
     src/core/sign.cpp
