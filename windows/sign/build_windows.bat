@@ -8,16 +8,50 @@ echo ColorSign Windows Build Script
 echo ========================================
 echo.
 
-REM Check for required tools
-echo Checking for required build tools...
-set "requiredTools=cmake gcc openssl"
+REM 1. Find MinGW / GCC
+echo Checking for MinGW/GCC...
+where gcc >nul 2>nul
+if %errorlevel% equ 0 (
+    echo [OK] GCC found in PATH
+    for /f "delims=" %%i in ('where gcc') do set "GCC_PATH=%%i"
+    goto found_path
+)
+
+echo GCC not in PATH. Checking common locations...
+
+if exist "C:\ProgramData\mingw64\mingw64\bin\gcc.exe" (
+    set "MINGW_BIN=C:\ProgramData\mingw64\mingw64\bin"
+    set "MINGW_ROOT=C:\ProgramData\mingw64\mingw64"
+)
+
+if exist "C:\MinGW\bin\gcc.exe" (
+    set "MINGW_BIN=C:\MinGW\bin"
+    set "MINGW_ROOT=C:\MinGW"
+)
+
+if exist "C:\msys64\mingw64\bin\gcc.exe" (
+    set "MINGW_BIN=C:\msys64\mingw64\bin"
+    set "MINGW_ROOT=C:\msys64\mingw64"
+)
+
+if defined MINGW_BIN (
+    echo [OK] Found GCC at !MINGW_BIN!
+    set "PATH=!MINGW_BIN!;%PATH%"
+) else (
+    echo [ERROR] Could not find GCC. Please install MinGW-w64 (e.g., via MSYS2) and add it to PATH.
+    exit /b 1
+)
+
+:found_path
+
+REM 2. Check for other tools
+set "requiredTools=cmake"
 for %%t in (%requiredTools%) do (
     where %%t >nul 2>nul
     if !errorlevel! equ 0 (
         echo [OK] %%t found
     ) else (
         echo [ERROR] Required tool '%%t' is not installed or not in PATH.
-        echo Please install it and ensure it's in your PATH.
         exit /b 1
     )
 )
@@ -25,19 +59,7 @@ for %%t in (%requiredTools%) do (
 echo All required tools are available.
 echo.
 
-REM Set compiler environment variables for CMake
-set "CC=C:/ProgramData/mingw64/mingw64/bin/gcc.exe"
-set "CXX=C:/ProgramData/mingw64/mingw64/bin/g++.exe"
-set "PATH=C:/ProgramData/mingw64/mingw64/bin;%PATH%"
-set "PKG_CONFIG_EXECUTABLE=C:/msys64/usr/bin/pkg-config.exe"
-set "PKG_CONFIG_PATH=C:/msys64/mingw64/lib/pkgconfig;%PKG_CONFIG_PATH%"
-set "OPENSSL_ROOT_DIR=C:/ProgramData/mingw64/mingw64/opt"
-
-REM Export environment variables for subprocesses
-setx CC "C:/ProgramData/mingw64/mingw64/bin/gcc.exe"
-setx CXX "C:/ProgramData/mingw64/mingw64/bin/g++.exe"
-
-REM Clean build directory to avoid stale CMake cache issues
+REM Clean build directory
 if exist "build" (
     echo Cleaning build directory...
     rmdir /s /q build
@@ -45,15 +67,21 @@ if exist "build" (
 
 REM Create build directory
 mkdir build
-
-REM Change to build directory
 cd build
 
 REM Run CMake
 echo Configuring project with CMake...
-cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="mingw-toolchain.cmake" -DPKG_CONFIG_EXECUTABLE="C:/msys64/usr/bin/pkg-config.exe"
+REM Pass MINGW_ROOT if we found it, to help the toolchain
+if defined MINGW_ROOT (
+    set "CMAKE_OPTS=-DMINGW_ROOT=!MINGW_ROOT!"
+) else (
+    set "CMAKE_OPTS="
+)
+
+cmake .. -G "MinGW Makefiles" -DCMAKE_TOOLCHAIN_FILE="mingw-toolchain.cmake" !CMAKE_OPTS!
 if %errorlevel% neq 0 (
     echo CMake configuration failed.
+    echo Try checking your CMakeError.log in build/CMakeFiles/
     exit /b 1
 )
 
@@ -70,10 +98,7 @@ cd ..
 
 echo.
 echo Build completed successfully!
-echo Executables are available in the build/ directory:
-echo   - colorsign_test: Main ColorSign test executable
-echo   - ntt_simd_benchmark: NTT SIMD benchmark tool
-echo.
+echo Executables are available in the build/ directory.
 
 REM Check if we can run the main test
 if exist "build\colorsign_test.exe" (
